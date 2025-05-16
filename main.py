@@ -83,12 +83,18 @@ def canta_melodie():
         utime.sleep(durata)
         buzzer.duty_u16(0)  # Oprește buzzer-ul între note
 
+# --- Aprindere led-uri ---
+verdeLED = Pin(16, machine.Pin.OUT)
+rosuLED = Pin(22, machine.Pin.OUT)
+
 # --- Initializare ---
 init_lcd()
 trig.value(0)
 led.value(0)
 misca_servo(90)  # pozitia initiala (fata)
-
+rosuLED.on()
+verdeLED.off()
+    
 while True:
     trig.value(1)
     utime.sleep(0.00001)
@@ -101,10 +107,12 @@ while True:
 
     durata = stop_t - start_t
     dist = durata * 342 / 2 / 10000  # în cm
-
+    
     print(f"Distanta: {dist:.2f} cm")
     if dist < 5:
         print("Distanta mai mica de 5 cm, misca servo")
+        rosuLED.value(0)
+        verdeLED.value(1)
         led.value(1)
         misca_servo(0)  # rotire la stânga
         send_byte(0x01, 0)  # clear LCD
@@ -113,6 +121,8 @@ while True:
         utime.sleep(2)
         misca_servo(90)  # revine la poziția inițială
         send_byte(0x01, 0)  # clear LCD
+        verdeLED.off()
+        rosuLED.on()
 
 
     utime.sleep(0.4)
