@@ -2,47 +2,40 @@ import network
 import socket
 from lcd import lcd_print, init_lcd
 import urequests
+import time
 
-Server="http://192.168.249.1:8000"
+Server = "http://192.168.218.1:80"
 
-def connect_wifi():
-#setari pentru wifi
-#conexiune by default
-        ssid='madalinaHotspot'
-        password='m9adalina2003'
+def connect_wifi(timeout=15):
+    # setari pentru wifi
+    # conexiune by default
+    ssid = 'madalinaHotspot'
+    password = 'm9adalina2003'
 
-#daca vrem sa ne conectam la reteaua proprie
-        #ssidInput=input('Introduceti numele retelei: ')
-        #passwordInput=input('Introduceti parola retelei la care va conectati:')
+    # ssidInput=input('Introduceti numele retelei: ')
+    # passwordInput=input('Introduceti parola retelei la care va conectati:')
 
-        wlan=network.WLAN(network.STA_IF)
-        wlan.active(True)
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
 
-        #wlan.connect(ssidInput,passwordInput)
-        wlan.connect(ssid,password)
-        init_lcd()
-        lcd_print("Se conecteaza...")
-        while not wlan.isconnected():
-                pass
+    # wlan.connect(ssidInput,passwordInput)
+    wlan.connect(ssid, password)
+    init_lcd()
+    lcd_print("Se conecteaza...")
 
-        ip=wlan.ifconfig()[0]
-        print(f'Conectat. IP: {ip}')
-        init_lcd()
-        lcd_print("S-a conectat la WiFi!")
+    start = time.time()
+    while not wlan.isconnected():
+        if time.time() - start > timeout:
+            lcd_print("Timeout conexiune")
+            print("Nu s-a putut conecta la Wi-Fi")
+            return False
+        time.sleep(0.5)
 
-def trimite_update(distanta,status):
-        try:
-                r=urequests.post(Server +"/update",json={"distanta" : round(distanta,2), "status":status})
-                r.close()
-        except Exception as e:
-                print("Eroare POST:", e)
+    ip = wlan.ifconfig()[0]
+    print(f'Conectat. IP: {ip}')
+    init_lcd()
+    lcd_print("S-a conectat!")
+    return True
 
-def preia_comanda():
-        try:
-                r=urequests.get(Server+'/preia_comanda')
-                comanda=r.json().get("comanda")
-                r.close()
-                return comanda
-        except Exception as e:
-                print("Eroare GET: ", e)
-                return "none"
+
+
